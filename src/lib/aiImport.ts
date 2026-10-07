@@ -418,16 +418,6 @@ function normalizeScreenplayBlocks(project: Project, value: unknown): Segment['s
   return blocks.length ? blocks : undefined
 }
 
-function normalizeScreenplayBlockType(value: unknown): NonNullable<Segment['screenplayBlocks']>[number]['type'] {
-  if (value === '手语/字幕') return '旁白/字幕'
-  if (value === '场景' || value === '动作' || value === '对白' || value === '旁白/字幕' || value === '备注') return value
-  if (typeof value === 'string') {
-    const mapped = englishScreenplayBlockTypes[normalizeEnumKey(value)]
-    if (mapped) return mapped
-  }
-  return '动作'
-}
-
 // 英文 AI 会把枚举值翻译成英文,静默回退会让数据悄悄劣化(所有段落变「推进」同色同型),
 // 这里把常见英文写法映射回中文枚举;仍映射不上的由导入预览计数提示
 const englishScreenplayBlockTypes: Record<string, NonNullable<Segment['screenplayBlocks']>[number]['type']> = {
@@ -436,6 +426,25 @@ const englishScreenplayBlockTypes: Record<string, NonNullable<Segment['screenpla
   'dialogue': '对白', 'dialog': '对白',
   'narration': '旁白/字幕', 'voiceover': '旁白/字幕', 'voice over': '旁白/字幕', 'vo': '旁白/字幕', 'caption': '旁白/字幕',
   'note': '备注', 'remark': '备注', 'comment': '备注',
+}
+
+const russianScreenplayBlockTypes: Record<string, NonNullable<Segment['screenplayBlocks']>[number]['type']> = {
+  'сцена': '场景', 'заголовок сцены': '场景', 'место действия': '场景',
+  'действие': '动作', 'описание действия': '动作',
+  'диалог': '对白', 'реплика': '对白',
+  'закадровый голос': '旁白/字幕', 'закадровый голос/титры': '旁白/字幕', 'титры': '旁白/字幕', 'субтитры': '旁白/字幕', 'голос за кадром': '旁白/字幕',
+  'примечание': '备注', 'комментарий': '备注', 'заметка': '备注',
+}
+
+function normalizeScreenplayBlockType(value: unknown): NonNullable<Segment['screenplayBlocks']>[number]['type'] {
+  if (value === '手语/字幕') return '旁白/字幕'
+  if (value === '场景' || value === '动作' || value === '对白' || value === '旁白/字幕' || value === '备注') return value
+  if (typeof value === 'string') {
+    const key = normalizeEnumKey(value)
+    const mapped = englishScreenplayBlockTypes[key] || russianScreenplayBlockTypes[key]
+    if (mapped) return mapped
+  }
+  return '动作'
 }
 
 const englishSegmentTypes: Record<string, SegmentType> = {
@@ -454,6 +463,22 @@ const englishSegmentTypes: Record<string, SegmentType> = {
   'conclusion': '结论', 'epilogue': '结论',
 }
 
+const russianSegmentTypes: Record<string, SegmentType> = {
+  'начало': '开场', 'вступление': '开场', 'завязка': '开场', 'экспозиция': '开场', 'введение': '开场', 'открытие': '开场', 'сетап': '开场',
+  'конфликт': '冲突', 'провоцирующее происшествие': '冲突', 'инцидент': '冲突', 'столкновение': '冲突',
+  'развитие': '推进', 'продвижение': '推进', 'действие': '推进', 'развитие действия': '推进', 'нарастание': '推进', 'прогрессия': '推进',
+  'поворот': '转折', 'поворотный момент': '转折', 'перелом': '转折', 'твист': '转折', 'мидпойнт': '转折', 'середина': '转折',
+  'эскалация': '升级', 'обострение': '升级', 'усиление': '升级', 'нагнетание': '升级',
+  'кризис': '低谷', 'спад': '低谷', 'низшая точка': '低谷', 'темная ночь души': '低谷', 'провал': '低谷', 'тупик': '低谷',
+  'кульминация': '高潮', 'пик': '高潮', 'апогей': '高潮',
+  'финал': '结尾', 'концовка': '结尾', 'развязка': '结尾', 'завершение': '结尾', 'разрешение': '结尾', 'эпилог': '结尾',
+  'побочная линия': '支线', 'подсюжет': '支线', 'сабплот': '支线', 'второстепенная линия': '支线',
+  'переход': '过渡', 'связка': '过渡',
+  'предыстория': '背景', 'фон': '背景', 'контекст': '背景',
+  'описание': '说明', 'пояснение': '说明',
+  'заключение': '结论', 'вывод': '结论', 'итог': '结论',
+}
+
 const englishNarrativeOrders: Record<string, NarrativeOrder> = {
   'chronological': '顺叙', 'linear': '顺叙', 'sequential': '顺叙',
   'flashback': '倒叙', 'reverse': '倒叙',
@@ -467,7 +492,21 @@ const englishNarrativeOrders: Record<string, NarrativeOrder> = {
   'main': '主线', 'main line': '主线', 'mainline': '主线', 'main plot': '主线', 'a plot': '主线',
 }
 
-// 统一英文枚举键:小写、去首尾空白、下划线/连字符当空格、空格折叠
+const russianNarrativeOrders: Record<string, NarrativeOrder> = {
+  'хронологический': '顺叙', 'линейный': '顺叙', 'прямой': '顺叙', 'последовательный': '顺叙',
+  'флешбэк': '倒叙', 'обратный': '倒叙', 'ретроспектива': '倒叙', 'воспоминание': '倒叙',
+  'вставка': '插叙', 'интерлюдия': '插叙',
+  'параллельный': '并行叙事', 'параллельное повествование': '并行叙事', 'параллельный сюжет': '并行叙事',
+  'монтаж': '蒙太奇压缩', 'монтажная склейка': '蒙太奇压缩',
+  'инверсия информации': '信息反转', 'переворот информации': '信息反转',
+  'кольцевой': '循环叙事', 'кольцевая композиция': '循环叙事', 'цикличный': '循环叙事',
+  'субъективный': '主观视角', 'от первого лица': '主观视角',
+  'многолинейный': '多线并行', 'многопоточный': '多线并行',
+  'основная линия': '主线', 'главная линия': '主线',
+  'побочная линия': '支线',
+}
+
+// 统一英文/俄文枚举键:小写、去首尾空白、下划线/连字符当空格、空格折叠
 function normalizeEnumKey(value: string): string {
   return value.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ')
 }
@@ -477,7 +516,8 @@ function countUnknownSegmentTypes(segments: ImportedSegment[]): number {
     const value = segment.type
     // 没给 type 是另一回事(走默认值),只统计给了但认不出的
     if (typeof value !== 'string' || !value.trim()) return false
-    return !segmentTypes.includes(value as SegmentType) && !englishSegmentTypes[normalizeEnumKey(value)]
+    const key = normalizeEnumKey(value)
+    return !segmentTypes.includes(value as SegmentType) && !englishSegmentTypes[key] && !russianSegmentTypes[key]
   }).length
 }
 
@@ -554,13 +594,15 @@ function normalizeImportance(value: unknown): Segment['importance'] {
 
 function normalizeSegmentType(value?: string): SegmentType {
   if (value && segmentTypes.includes(value as SegmentType)) return value as SegmentType
-  const mapped = value ? englishSegmentTypes[normalizeEnumKey(value)] : undefined
+  const key = value ? normalizeEnumKey(value) : ''
+  const mapped = key ? (englishSegmentTypes[key] || russianSegmentTypes[key]) : undefined
   return mapped ?? '推进'
 }
 
 function normalizeNarrativeOrder(value?: string): NarrativeOrder {
   if (value && narrativeOrders.includes(value as NarrativeOrder)) return value as NarrativeOrder
-  const mapped = value ? englishNarrativeOrders[normalizeEnumKey(value)] : undefined
+  const key = value ? normalizeEnumKey(value) : ''
+  const mapped = key ? (englishNarrativeOrders[key] || russianNarrativeOrders[key]) : undefined
   return mapped ?? '顺叙'
 }
 

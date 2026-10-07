@@ -80,6 +80,50 @@ test('aiImport handles messy real-world AI output', async (t) => {
       assert.equal(result.segments[1].type, '推进')
     })
 
+    await t.test('maps Russian enum synonyms back to Chinese enums', () => {
+      const payload = JSON.stringify({
+        segments: [
+          {
+            title: 'Эпизод 1: Завязка',
+            type: 'Завязка',
+            startTime: 0,
+            endTime: 30,
+            narrativeOrder: 'Хронологический',
+            screenplayBlocks: [{ type: 'Сцена', text: 'Интерьер дома' }],
+          },
+          {
+            title: 'Эпизод 2: Кульминация',
+            type: 'Кульминация',
+            startTime: 30,
+            endTime: 70,
+            narrativeOrder: 'Параллельное повествование',
+            screenplayBlocks: [{ type: 'Действие', text: 'Погоня' }],
+          },
+          {
+            title: 'Эпизод 3: Развязка',
+            type: 'Развязка',
+            startTime: 70,
+            endTime: 100,
+            narrativeOrder: 'Линейный',
+            screenplayBlocks: [{ type: 'Диалог', text: 'Конец' }],
+          },
+        ],
+      })
+      const result = importAiAnalysis(makeProject(), payload)
+      assert.equal(result.segments.length, 3)
+      assert.equal(result.segments[0].type, '开场')
+      assert.equal(result.segments[0].narrativeOrder, '顺叙')
+      assert.equal(result.segments[0].screenplayBlocks?.[0].type, '场景')
+      assert.equal(result.segments[1].type, '高潮')
+      assert.equal(result.segments[1].narrativeOrder, '并行叙事')
+      assert.equal(result.segments[1].screenplayBlocks?.[0].type, '动作')
+      assert.equal(result.segments[2].type, '结尾')
+      assert.equal(result.segments[2].screenplayBlocks?.[0].type, '对白')
+
+      const preview = previewAiAnalysisImport(makeProject(), payload)
+      assert.equal(preview.unknownTypeCount, 0)
+    })
+
     await t.test('counts unmappable segment types instead of silently defaulting', () => {
       const payload = JSON.stringify({
         segments: [
