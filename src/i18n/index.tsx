@@ -83,6 +83,7 @@ function LanguageSwitcher() {
         onChange={(event) => setLocale(event.target.value as Locale)}
       >
         <option value="en">English</option>
+        <option value="ru">Русский</option>
         <option value="zh-CN">简体中文</option>
       </select>
     </div>

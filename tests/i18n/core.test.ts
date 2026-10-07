@@ -9,6 +9,8 @@ test('normalizes supported locales', () => {
 
   assert.equal(normalizeLocale('en-US'), 'en')
 
+  assert.equal(normalizeLocale('ru-RU'), 'ru')
+
   assert.equal(normalizeLocale('zh_CN'), 'zh-CN')
 
   assert.equal(normalizeLocale('fr-FR'), null)
@@ -18,6 +20,8 @@ test('normalizes supported locales', () => {
 test('persisted locale takes priority over browser locale', () => {
 
   assert.equal(detectLocale('zh-CN', ['en-US']), 'zh-CN')
+
+  assert.equal(detectLocale('ru', ['en-US']), 'ru')
 
   assert.equal(detectLocale('en', ['zh-CN']), 'en')
 
@@ -103,3 +107,12 @@ test('English catalog uses film-breakdown terminology and excludes source-code f
   assert.equal(entries.some(([key]) => key.includes('useState') || key.includes('readBalancedJson')), false)
   assert.equal(entries.some(([, value]) => /movie pulling|pulling notes|\bparagraphs?\b/i.test(value)), false)
 })
+
+test('Russian catalog matches critical translations', async () => {
+  const { russianCatalog } = await import('../../src/i18n/catalog.ru.ts')
+  assert.equal(russianCatalog['\u62c9\u7247\u7b14\u8bb0'], 'Lapian Notes')
+  assert.equal(russianCatalog['\u5f00\u59cb\u62bd\u5e27...'], 'Начать извлечение кадров...')
+  assert.equal(russianCatalog['\u672a\u547d\u540d\u6bb5\u843d'], 'Безымянный эпизод')
+  assert.equal(russianCatalog['\u7535\u5f71\u65f6\u95f4\u8f74'], 'Таймлайн фильма')
+})
+
