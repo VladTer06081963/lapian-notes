@@ -43,7 +43,7 @@ async function main() {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'MiniMax-VL-01',
+        model: 'MiniMax-M3',
         messages: [{ role: 'user', content: 'Привет! Ответь одним словом: "Работает".' }],
         max_tokens: 50,
       }),
