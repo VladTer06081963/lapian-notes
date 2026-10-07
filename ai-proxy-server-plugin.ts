@@ -65,7 +65,22 @@ async function handleChat(rawBody: string, res: import('node:http').ServerRespon
     res.end(JSON.stringify({ error: 'baseUrl 必须是 https 地址' }))
     return
   }
-  if (!body.apiKey || !body.model || !Array.isArray(body.messages)) {
+  let apiKey = (body.apiKey ?? '').trim()
+  if (!apiKey) {
+    if (baseUrl.includes('minimax') || (body.model && body.model.toLowerCase().includes('minimax'))) {
+      apiKey = (process.env.MINIMAX_API_KEY || process.env.VITE_MINIMAX_API_KEY || '').trim()
+    } else if (baseUrl.includes('googleapis') || (body.model && body.model.toLowerCase().includes('gemini'))) {
+      apiKey = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '').trim()
+    } else if (baseUrl.includes('moonshot') || (body.model && body.model.toLowerCase().includes('kimi'))) {
+      apiKey = (process.env.KIMI_API_KEY || process.env.VITE_KIMI_API_KEY || '').trim()
+    } else if (baseUrl.includes('anthropic') || (body.model && body.model.toLowerCase().includes('claude'))) {
+      apiKey = (process.env.CLAUDE_API_KEY || process.env.VITE_CLAUDE_API_KEY || '').trim()
+    } else if (baseUrl.includes('openai') || (body.model && body.model.toLowerCase().includes('gpt'))) {
+      apiKey = (process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY || '').trim()
+    }
+  }
+
+  if (!apiKey || !body.model || !Array.isArray(body.messages)) {
     res.statusCode = 400
     res.end(JSON.stringify({ error: '缺少 apiKey、model 或 messages' }))
     return
@@ -76,7 +91,7 @@ async function handleChat(rawBody: string, res: import('node:http').ServerRespon
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${body.apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: body.model,

@@ -106,3 +106,21 @@ test('extractResponseText:接住字符串与分块数组两种 content', async (
     await server.close()
   }
 })
+
+test('DIRECT_AI_PROVIDERS: contains MiniMax with vision enabled and valid baseUrl', async () => {
+  const { server, directAi } = await loadModules()
+  try {
+    const minimax = directAi.DIRECT_AI_PROVIDERS.find((p) => p.id === 'minimax')
+    assert.ok(minimax, 'MiniMax provider must be present in DIRECT_AI_PROVIDERS')
+    assert.equal(minimax.baseUrl, 'https://api.minimax.io/v1')
+    assert.equal(minimax.defaultModel, 'MiniMax-VL-01')
+    assert.equal(minimax.vision, true)
+
+    // Check config load returns valid DirectAiConfig
+    const config = directAi.loadDirectAiConfig()
+    assert.ok(config.providerId, 'providerId must be defined')
+    assert.ok(config.baseUrl, 'baseUrl must be defined')
+  } finally {
+    await server.close()
+  }
+})

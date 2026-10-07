@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { DIRECT_AI_PROVIDERS, loadDirectAiConfig, saveDirectAiConfig } from '../lib/directAi'
+import { DIRECT_AI_PROVIDERS, getEnvApiKey, loadDirectAiConfig, saveDirectAiConfig } from '../lib/directAi'
 import type { DirectAiConfig } from '../lib/directAi'
 
 // AI 直连(BYOK)配置弹窗:选服务商、填 key、选是否附带画面拼图。
@@ -23,9 +23,12 @@ export function DirectAiModal(props: DirectAiModalProps) {
 
   const provider = DIRECT_AI_PROVIDERS.find((item) => item.id === config.providerId)
   const isCustom = config.providerId === 'custom'
+  const envKey = getEnvApiKey(config.providerId)
+  const effectiveApiKey = (config.apiKey || envKey).trim()
+
   const canRun =
     !props.running &&
-    Boolean(config.apiKey.trim()) &&
+    Boolean(effectiveApiKey) &&
     Boolean(config.baseUrl.trim()) &&
     Boolean(config.model.trim()) &&
     (config.sendFrames || props.hasSubtitles)
@@ -33,12 +36,30 @@ export function DirectAiModal(props: DirectAiModalProps) {
   function handleProviderChange(providerId: string) {
     const next = DIRECT_AI_PROVIDERS.find((item) => item.id === providerId)
     if (!next) return
+    const nextEnvKey = getEnvApiKey(providerId)
+    const rememberedKey = config.providerKeys?.[providerId] ?? nextEnvKey
     setConfig((prev) => ({
       ...prev,
       providerId,
       baseUrl: next.id === 'custom' ? prev.baseUrl : next.baseUrl,
       model: next.id === 'custom' ? prev.model : next.defaultModel,
       sendFrames: next.vision,
+      apiKey: rememberedKey,
+      providerKeys: {
+        ...prev.providerKeys,
+        [prev.providerId]: prev.apiKey,
+      },
+    }))
+  }
+
+  function handleApiKeyChange(value: string) {
+    setConfig((prev) => ({
+      ...prev,
+      apiKey: value,
+      providerKeys: {
+        ...prev.providerKeys,
+        [prev.providerId]: value,
+      },
     }))
   }
 
@@ -51,7 +72,7 @@ export function DirectAiModal(props: DirectAiModalProps) {
             {props.running ? (
               <button onClick={props.onCancel}>停止</button>
             ) : (
-              <button disabled={!canRun} onClick={() => props.onRun(config)}>开始分析</button>
+              <button disabled={!canRun} onClick={() => props.onRun({ ...config, apiKey: effectiveApiKey })}>开始分析</button>
             )}
             <button disabled={props.running} onClick={props.onClose}>关闭</button>
           </div>
@@ -100,8 +121,9 @@ export function DirectAiModal(props: DirectAiModalProps) {
               value={config.apiKey}
               disabled={props.running}
               autoComplete="off"
+              placeholder={envKey ? '• • • (.env)' : 'sk-...'}
               data-i18n-ignore
-              onChange={(event) => setConfig((prev) => ({ ...prev, apiKey: event.target.value }))}
+              onChange={(event) => handleApiKeyChange(event.target.value)}
             />
           </label>
           <label className="direct-ai-checkbox">

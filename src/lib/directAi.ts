@@ -20,6 +20,7 @@ export interface DirectAiProvider {
 // 刻意不预设 DeepSeek 等纯文本模型:看不了画面,拆视觉型影片时 techniques/无对白段落/情绪曲线全瞎,
 // 预设进来等于引导用户用残血模式。确实要用的走「自定义」+取消勾选拼图,工具会退到纯字幕分析。
 export const DIRECT_AI_PROVIDERS: DirectAiProvider[] = [
+  { id: 'minimax', label: 'MiniMax', baseUrl: 'https://api.minimax.io/v1', defaultModel: 'MiniMax-VL-01', vision: true },
   { id: 'gemini', label: 'Gemini (Google)', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', defaultModel: 'gemini-2.5-flash', vision: true },
   { id: 'kimi', label: 'Kimi (Moonshot)', baseUrl: 'https://api.moonshot.cn/v1', defaultModel: 'kimi-latest', vision: true },
   { id: 'openai', label: 'OpenAI', baseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-4o', vision: true },
@@ -33,31 +34,61 @@ export interface DirectAiConfig {
   model: string
   apiKey: string
   sendFrames: boolean
+  providerKeys?: Record<string, string>
 }
 
 const CONFIG_STORAGE_KEY = 'lapian-notes.direct-ai.v1'
+
+export function getEnvApiKey(providerId: string): string {
+  try {
+    if (typeof __AI_ENV_KEYS__ !== 'undefined' && __AI_ENV_KEYS__ && typeof __AI_ENV_KEYS__[providerId] === 'string') {
+      const val = __AI_ENV_KEYS__[providerId].trim()
+      if (val) return val
+    }
+  } catch {
+    // fallback
+  }
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    const key = `VITE_${providerId.toUpperCase()}_API_KEY`
+    const val = import.meta.env[key]
+    if (typeof val === 'string' && val.trim()) return val.trim()
+  }
+  return ''
+}
 
 export function loadDirectAiConfig(): DirectAiConfig {
   try {
     const raw = localStorage.getItem(CONFIG_STORAGE_KEY)
     if (raw) {
-      const parsed = JSON.parse(raw) as Partial<DirectAiConfig>
+      const parsed = JSON.parse(raw) as Partial<DirectAiConfig> & { providerKeys?: Record<string, string> }
       // 存过的服务商可能已被移出预设(如 DeepSeek),回落默认档
       if (typeof parsed.providerId === 'string' && DIRECT_AI_PROVIDERS.some((item) => item.id === parsed.providerId)) {
+        const envKey = getEnvApiKey(parsed.providerId)
+        const storedKey = parsed.providerKeys?.[parsed.providerId] ?? (typeof parsed.apiKey === 'string' ? parsed.apiKey : '')
         return {
           providerId: parsed.providerId,
-          baseUrl: typeof parsed.baseUrl === 'string' ? parsed.baseUrl : '',
-          model: typeof parsed.model === 'string' ? parsed.model : '',
-          apiKey: typeof parsed.apiKey === 'string' ? parsed.apiKey : '',
+          baseUrl: typeof parsed.baseUrl === 'string' && parsed.baseUrl ? parsed.baseUrl : (DIRECT_AI_PROVIDERS.find((item) => item.id === parsed.providerId)?.baseUrl ?? ''),
+          model: typeof parsed.model === 'string' && parsed.model ? parsed.model : (DIRECT_AI_PROVIDERS.find((item) => item.id === parsed.providerId)?.defaultModel ?? ''),
+          apiKey: storedKey.trim() || envKey,
           sendFrames: parsed.sendFrames !== false,
+          providerKeys: parsed.providerKeys || {},
         }
       }
     }
   } catch {
     // 存储损坏时回落默认配置
   }
-  const preset = DIRECT_AI_PROVIDERS[0]
-  return { providerId: preset.id, baseUrl: preset.baseUrl, model: preset.defaultModel, apiKey: '', sendFrames: preset.vision }
+  const providerWithEnvKey = DIRECT_AI_PROVIDERS.find((item) => item.id !== 'custom' && Boolean(getEnvApiKey(item.id)))
+  const preset = providerWithEnvKey ?? DIRECT_AI_PROVIDERS[0]
+  const envKey = getEnvApiKey(preset.id)
+  return {
+    providerId: preset.id,
+    baseUrl: preset.baseUrl,
+    model: preset.defaultModel,
+    apiKey: envKey,
+    sendFrames: preset.vision,
+    providerKeys: {},
+  }
 }
 
 export function saveDirectAiConfig(config: DirectAiConfig): void {
