@@ -100,6 +100,13 @@ test('extractResponseText:接住字符串与分块数组两种 content', async (
       }),
       'ok',
     )
+    // 过滤掉推理模型附带的 <think>...</think> 思考过程
+    assert.equal(
+      directAi.extractResponseText({
+        choices: [{ message: { content: '<think>some reasoning</think>{"ok":true}' } }],
+      }),
+      '{"ok":true}',
+    )
     assert.equal(directAi.extractResponseText(null), '')
     assert.equal(directAi.extractResponseText({ choices: [] }), '')
   } finally {

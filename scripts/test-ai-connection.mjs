@@ -45,7 +45,7 @@ async function main() {
       body: JSON.stringify({
         model: 'MiniMax-M3',
         messages: [{ role: 'user', content: 'Привет! Ответь одним словом: "Работает".' }],
-        max_tokens: 50,
+        max_tokens: 500,
       }),
       signal: AbortSignal.timeout(30000),
     })

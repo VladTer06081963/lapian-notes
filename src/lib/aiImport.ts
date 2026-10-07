@@ -1,4 +1,4 @@
-﻿import type { AudienceCurvePoint, AudienceCurvePointImportance, AudienceEmotionType, AudienceRhythmRole, MacroAnalysis, NarrativeOrder, Project, Segment, SegmentType, StoryLine } from '../types'
+import type { AudienceCurvePoint, AudienceCurvePointImportance, AudienceEmotionType, AudienceRhythmRole, MacroAnalysis, NarrativeOrder, Project, Segment, SegmentType, StoryLine } from '../types'
 import { narrativeOrders, segmentTypes } from '../types'
 import { type AiTimeValue, clampTime, parseAiTime } from './aiTime'
 import { segmentColors } from './project'
@@ -280,7 +280,8 @@ function repairLooseJson(text: string): string {
 }
 
 function extractJsonText(text: string): string {
-  const trimmed = text.trim()
+  const withoutThinking = text.replace(/<think>[\s\S]*?<\/think>/gi, '')
+  const trimmed = (withoutThinking.trim() ? withoutThinking : text).trim()
   const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
   if (fenced) return fenced[1].trim()
   const start = firstJsonStart(trimmed)

@@ -197,14 +197,18 @@ function extractErrorMessage(data: ChatCompletionResponse | null): string {
 }
 
 // content 可能是纯字符串,也可能是分块数组(部分兼容实现);两种都接
+// 过滤掉推理模型附带的思考过程(如 <think>...</think>),保证 JSON 解析稳定
 export function extractResponseText(data: ChatCompletionResponse | null): string {
   const content = data?.choices?.[0]?.message?.content
-  if (typeof content === 'string') return content
-  if (Array.isArray(content)) {
-    return content
+  let text = ''
+  if (typeof content === 'string') {
+    text = content
+  } else if (Array.isArray(content)) {
+    text = content
       .filter((part) => part && (part.type === undefined || part.type === 'text') && typeof part.text === 'string')
       .map((part) => part.text)
       .join('')
   }
-  return ''
+  const stripped = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
+  return stripped || text.trim()
 }
