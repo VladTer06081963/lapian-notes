@@ -1,6 +1,6 @@
 export type Locale = 'en' | 'ru' | 'zh-CN'
 
-export const DEFAULT_LOCALE: Locale = 'en'
+export const DEFAULT_LOCALE: Locale = 'ru'
 export const LOCALE_STORAGE_KEY = 'lapian-notes.locale'
 
 export type TranslationCatalog = Readonly<Record<string, string>>
@@ -8,8 +8,8 @@ export type TranslationCatalog = Readonly<Record<string, string>>
 export function normalizeLocale(value: string | null | undefined): Locale | null {
   if (!value) return null
   const normalized = value.trim().toLowerCase().replace('_', '-')
-  if (normalized === 'en' || normalized.startsWith('en-')) return 'en'
   if (normalized === 'ru' || normalized.startsWith('ru-')) return 'ru'
+  if (normalized === 'en' || normalized.startsWith('en-')) return 'en'
   if (normalized === 'zh' || normalized.startsWith('zh-')) return 'zh-CN'
   return null
 }
@@ -19,11 +19,11 @@ export function detectLocale(
   browserLocales: readonly string[] = [],
 ): Locale {
   const stored = normalizeLocale(storedLocale)
-  if (stored) return stored
+  if (stored && stored !== 'zh-CN') return stored
+  if (stored === 'zh-CN') return 'ru'
 
   for (const candidate of browserLocales) {
     const locale = normalizeLocale(candidate)
-    if (locale === 'zh-CN') return locale
     if (locale === 'ru') return locale
     if (locale === 'en') return locale
   }

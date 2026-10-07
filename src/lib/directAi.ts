@@ -25,7 +25,7 @@ export const DIRECT_AI_PROVIDERS: DirectAiProvider[] = [
   { id: 'kimi', label: 'Kimi (Moonshot)', baseUrl: 'https://api.moonshot.cn/v1', defaultModel: 'kimi-latest', vision: true },
   { id: 'openai', label: 'OpenAI', baseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-4o', vision: true },
   { id: 'claude', label: 'Claude (Anthropic)', baseUrl: 'https://api.anthropic.com/v1', defaultModel: 'claude-opus-5', vision: true },
-  { id: 'custom', label: '自定义', baseUrl: '', defaultModel: '', vision: true },
+  { id: 'custom', label: 'Пользовательский', baseUrl: '', defaultModel: '', vision: true },
 ]
 
 export interface DirectAiConfig {

@@ -82,9 +82,8 @@ function LanguageSwitcher() {
         value={locale}
         onChange={(event) => setLocale(event.target.value as Locale)}
       >
-        <option value="en">English</option>
         <option value="ru">Русский</option>
-        <option value="zh-CN">简体中文</option>
+        <option value="en">English</option>
       </select>
     </div>
   )
@@ -95,6 +94,10 @@ export function I18nProvider({ children }: PropsWithChildren) {
     let stored: string | null = null
     try {
       stored = window.localStorage.getItem(LOCALE_STORAGE_KEY)
+      if (stored === 'zh-CN') {
+        stored = 'ru'
+        window.localStorage.setItem(LOCALE_STORAGE_KEY, 'ru')
+      }
     } catch {
       // Storage can be unavailable in hardened or private browser contexts.
     }

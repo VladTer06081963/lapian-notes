@@ -17,21 +17,21 @@ test('normalizes supported locales', () => {
 
 })
 
-test('persisted locale takes priority over browser locale', () => {
+test('persisted locale takes priority over browser locale and migrates zh-CN to ru', () => {
 
-  assert.equal(detectLocale('zh-CN', ['en-US']), 'zh-CN')
+  assert.equal(detectLocale('zh-CN', ['en-US']), 'ru')
 
   assert.equal(detectLocale('ru', ['en-US']), 'ru')
 
-  assert.equal(detectLocale('en', ['zh-CN']), 'en')
+  assert.equal(detectLocale('en', ['ru-RU']), 'en')
 
 })
 
-test('English is the fallback for unsupported browser locales', () => {
+test('Russian is the fallback for unsupported browser locales', () => {
 
-  assert.equal(detectLocale(null, ['de-DE']), 'en')
+  assert.equal(detectLocale(null, ['de-DE']), 'ru')
 
-  assert.equal(detectLocale(null, []), 'en')
+  assert.equal(detectLocale(null, []), 'ru')
 
 })
 
